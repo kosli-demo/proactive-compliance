@@ -25,13 +25,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CLONE_PUSH_REPOS }}
         run: |
-          # REPOS="$(./bin/XXX.py)"
-          echo 'repos=[{"repo_name":"api-key"}]' >> ${GITHUB_OUTPUT}
+          REPOS="$(./bin/find_repos_with_no_image.py)"
+          echo "repos=${REPOS}" >> ${GITHUB_OUTPUT}
 
   fix:
     needs: [find-repos]
     if: ${{ needs.find-repos.outputs.repos != '[]' }}
     strategy:
+      max-parallel: 5
       matrix:
         include: ${{ fromJSON(needs.find-repos.outputs.repos) }}
     uses: kosli-demo/stochastic-committer/.github/workflows/commit-to-repo-and-run-ci.yml@main
@@ -43,9 +44,3 @@ jobs:
       KOSLI_API_TOKEN_STAGING: ${{ secrets.KOSLI_API_TOKEN_STAGING }}
       KOSLI_API_TOKEN_PROD: ${{ secrets.KOSLI_API_TOKEN_PROD }}
 
-
-    # uses: kosli-demo/stochastic-committer/.github/workflows/commit-to-repo.yml@main
-    # with:
-    #   repo_name: ${{ matrix.repo_name }}
-    # secrets:
-    #   CLONE_PUSH_REPOS: ${{ secrets.CLONE_PUSH_REPOS }}
